@@ -1,0 +1,163 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Flask~Mongo</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css">
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"></script>
+</head>
+<body>
+	<div class="container mt-3">
+		
+	<h1 class="text-center alert alert-danger">Flask MongoDB Ajax Employee Registration</h1>
+	<div class="row">
+		<div class="col-sm-4">
+			<h4 class="text-center alert alert-info">Add/Update Employee</h4>
+			<form action="/users" method="POST">
+			<input type="hidden" name="eid" id="eid">
+ <div class="form-group">
+    <label for="exampleInputEmail1">Full Name </label>
+    <input type="text" class="form-control" name="fname" id="nameid" aria-describedby="emailHelp" placeholder="Enter your name" required>
+  </div>
+  <div class="form-group">
+    <label for="exampleInputEmail1">Email address</label>
+    <input type="email" class="form-control" name="email" id="emailid" aria-describedby="emailHelp" placeholder="Enter email" required>
+  </div>
+  <div class="form-group">
+    <label for="exampleInputPassword1">Password</label>
+    <input type="password" class="form-control" name="pass" id="passwordid" placeholder="Password" required>
+  </div>
+
+  <button type="submit" class="btn btn-primary">Submit</button>
+
+			</form>
+			 {% with messages = get_flashed_messages(with_categories=true) %}
+			  {% if messages %} 
+    {% for category, message in messages %} 
+    {% if category == 'error' %}
+    <div class="alert alert-danger alter-dismissable fade show mt-2 alert-msg" role="alert">
+      {{ message }}
+      <button type="button" class="close" data-dismiss="alert">
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    {% else %}
+    <div class="alert alert-success alter-dismissable fade show mt-2 alert-msg" role="alert">
+      {{ message }}
+      <!-- <button type="button" class="close" data-dismiss="alert">
+        <span aria-hidden="true">&times;</span>
+      </button> -->
+    </div>
+    {% endif %} {% endfor %} {% endif %} {% endwith %}
+		<div class="mt-2 alert alert-danger" style="display: none;" id="msg"></div>
+		</div>
+		<div class="col-sm-8">
+			<h4 class="text-center alert alert-info">Show Employee Details</h4>
+			<table class="table table-hover">
+				<thead>
+					<!-- <th>ID</th> -->
+					<th>NAME</th>
+					<th>EMAIL</th>
+					<th>PASSWORD</th>
+					<th>ACTION</th>
+				</thead>
+				<tbody id="tbody">
+					
+			
+					{% for u in user %}
+				
+				<tr>
+					<!-- <td>{{u._id}}</td> -->
+					<td>{{u.name}}</td>
+					<td>{{u.email}}</td>
+					<td>{{u.password}}</td>
+					<td>
+					<input type="button" class="btn btn-warning btn-sm btn-edit" data-sid="{{u._id}}" value="Edit" />
+					<input type="button" class="btn btn-danger btn-sm btn-del" data-sid="{{u._id}}" value="Delete" />
+					</td>
+				</tr>
+
+				{% endfor %}
+			
+
+				</tbody>
+			</table>
+		</div>
+	</div>
+	</div>
+
+	<script>
+window.setTimeout(function(){
+    $(".alert-msg").fadeTo(500,0).slideUp(500,
+        function(){
+            $(this).remove();
+        });
+},3000);
+
+
+// Delete data
+		$("tbody").on("click", ".btn-del", function(){
+			// console.log("del btn click");
+			let id = $(this).attr("data-sid");
+			// console.log(id);
+			let csr = $('input[name=csrfmiddlewaretoken]').val()
+			mydata={eid:id , csrfmiddlewaretoken:csr}
+			mythis=this;
+			$.ajax({
+					url : '/delete',
+					method : "POST",
+					data : mydata,
+					success : function(data){
+						// console.log(data.eid)
+						if(data.status == 1){
+						// console.log("deleted")
+							$('#msg').text("Delete Successfully");
+							$('#msg').show();
+							$(mythis).closest("tr").fadeOut(1000);
+						}
+						if(data.status == 0){
+						// console.log("Not deleted")
+							$('#msg').text("Something Went Wrong...");
+							$('#msg').show();						}
+							$('#msg').fadeOut(3000);
+					},
+			});
+		});
+
+
+
+		// edit data
+		$("tbody").on("click", ".btn-edit", function(){
+			// console.log("del btn click");
+			let id = $(this).attr("data-sid");
+			let csr = $('input[name=csrfmiddlewaretoken]').val()
+			mydata={eid:id , csrfmiddlewaretoken:csr}
+
+			$.ajax({
+					url : "/edit",
+					method : "POST",
+					data : mydata,
+					datatype :"json",
+					success : function(data){
+
+						// console.log(data);
+					if(data.status == 1){
+						$("#eid").val(data.employee['id']);
+						$("#nameid").val(data.employee['name']);
+						$("#emailid").val(data.employee['email']);
+						$("#passwordid").val(data.employee['password']);
+							}
+					else{
+							$('#msg').text("Something Went Wrong...");
+							$('#msg').show();						
+							$('#msg').fadeOut(3000);	
+						}
+					},
+			});
+		});
+
+	</script>
+</body>
+</html>
